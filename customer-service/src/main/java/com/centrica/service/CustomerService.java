@@ -2,6 +2,8 @@ package com.centrica.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -36,17 +38,49 @@ public class CustomerService {
 
 	public List<Customer> retrieve(String ucrn) {
 		List<Customer> listofcustomer = new ArrayList<Customer>();
-		List<CustomerDatabase> customerList = repo.findByUcrn(ucrn);
-		ModelMapper mapper = new ModelMapper();
-		customerList.forEach(customers -> {
-			Customer customer = new Customer();
+		Optional<List<CustomerDatabase>> customerList = repo.findByUcrn(ucrn);
+		if (customerList.isPresent()) {
+			ModelMapper mapper = new ModelMapper();
+			customerList.get().forEach(customers -> {
+				Customer customer = new Customer();
+				ArrayList<PhoneNumber> phonedetails = new ArrayList<PhoneNumber>();
+				customer = mapper.map(customers, Customer.class);
+				List<String> energyaccount = Stream.of(customers.getEnergyAccounts().split(","))
+						.collect(Collectors.toList());
+				customer.setEnergyAccounts(energyaccount);
+				List<String> telephonenumber = Stream.of(customers.getNumber().split(",")).collect(Collectors.toList());
+				List<String> type = Stream.of(customers.getType().split(",")).collect(Collectors.toList());
+				String[] tempnumber = telephonenumber.toArray(new String[0]);
+				String[] temptype = type.toArray(new String[0]);
+				int length = telephonenumber.size();
+				IntStream.range(0, length).forEach(i -> {
+					PhoneNumber phonenumber = new PhoneNumber();
+					phonenumber.setNumber(tempnumber[i]);
+					phonenumber.setType(temptype[i]);
+					phonedetails.add(phonenumber);
+				});
+				customer.setTelephoneNumbers(phonedetails);
+				listofcustomer.add(customer);
+			});
+		} else {
+			throw new NoSuchElementException("Customer with given id does not exist");
+		}
+		return listofcustomer;
+	}
+
+	public Customer retrivecustomer(int id) {
+		Customer customer = new Customer();
+		Optional<CustomerDatabase> customerList = repo.findById(id);
+		if (customerList.isPresent()) {
+			ModelMapper mapper = new ModelMapper();
 			ArrayList<PhoneNumber> phonedetails = new ArrayList<PhoneNumber>();
-			customer = mapper.map(customers, Customer.class);
-			List<String> energyaccount = Stream.of(customers.getEnergyAccounts().split(","))
+			customer = mapper.map(customerList.get(), Customer.class);
+			List<String> energyaccount = Stream.of(customerList.get().getEnergyAccounts().split(","))
 					.collect(Collectors.toList());
 			customer.setEnergyAccounts(energyaccount);
-			List<String> telephonenumber = Stream.of(customers.getNumber().split(",")).collect(Collectors.toList());
-			List<String> type = Stream.of(customers.getType().split(",")).collect(Collectors.toList());
+			List<String> telephonenumber = Stream.of(customerList.get().getNumber().split(","))
+					.collect(Collectors.toList());
+			List<String> type = Stream.of(customerList.get().getType().split(",")).collect(Collectors.toList());
 			String[] tempnumber = telephonenumber.toArray(new String[0]);
 			String[] temptype = type.toArray(new String[0]);
 			int length = telephonenumber.size();
@@ -57,32 +91,9 @@ public class CustomerService {
 				phonedetails.add(phonenumber);
 			});
 			customer.setTelephoneNumbers(phonedetails);
-			listofcustomer.add(customer);
-		});
-		return listofcustomer;
-	}
-
-	public Customer retrivecustomer(int id) {
-		Customer customer = new Customer();
-		CustomerDatabase customerList = repo.findById(id);
-		ModelMapper mapper = new ModelMapper();
-		ArrayList<PhoneNumber> phonedetails = new ArrayList<PhoneNumber>();
-		customer = mapper.map(customerList, Customer.class);
-		List<String> energyaccount = Stream.of(customerList.getEnergyAccounts().split(","))
-				.collect(Collectors.toList());
-		customer.setEnergyAccounts(energyaccount);
-		List<String> telephonenumber = Stream.of(customerList.getNumber().split(",")).collect(Collectors.toList());
-		List<String> type = Stream.of(customerList.getType().split(",")).collect(Collectors.toList());
-		String[] tempnumber = telephonenumber.toArray(new String[0]);
-		String[] temptype = type.toArray(new String[0]);
-		int length = telephonenumber.size();
-		IntStream.range(0, length).forEach(i -> {
-			PhoneNumber phonenumber = new PhoneNumber();
-			phonenumber.setNumber(tempnumber[i]);
-			phonenumber.setType(temptype[i]);
-			phonedetails.add(phonenumber);
-		});
-		customer.setTelephoneNumbers(phonedetails);
+		} else {
+			throw new NoSuchElementException("Customer with given id does not exist");
+		}
 		return customer;
 	}
 
