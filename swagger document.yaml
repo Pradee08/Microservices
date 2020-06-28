@@ -163,6 +163,28 @@ paths:
           description: 'Invalid syntax '
         '500':
           description: Internal server error
+    get:
+      tags:
+      - "accounts"
+      summary: "Get all accounts by customerId"
+      description: Retrieve accounts by customerId
+      operationId: "retrieveAccount"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "customerId"
+        in: "query"
+        description: "CustomerId values that need to be considered for filter"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+              $ref: "#/definitions/Account"
+        "400":
+          description: "Invalid customerId "
   '/accounts/{id}':
     get:
       tags:
@@ -249,7 +271,7 @@ definitions:
     type: object
     properties:
       id:
-        type: string
+        type: integer
       ucrn:
         type: string
       title:
@@ -285,6 +307,8 @@ definitions:
     properties:
       holderName:
         type: "string"
+      customerId:
+        type: "integer"
       id:
         type: "string"
       type:
