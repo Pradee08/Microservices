@@ -1,5 +1,9 @@
 package com.centrica.service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,21 +37,24 @@ public class AccountService {
 
 	public Account retrieve(String id) {
 		Account account = new Account();
-		AccountDatabase accountList = repo.findById(id).get();
-		ModelMapper mapper = new ModelMapper();
-		Tariff tariffDetails = new Tariff();
-		account = mapper.map(accountList, Account.class);
-		tariffDetails.setUnitRate(accountList.getUnitRate());
-		tariffDetails.setSupplierName(accountList.getSupplierName());
-		tariffDetails.setTariffName(accountList.getTariffName());
-		tariffDetails.setStandingCharge(accountList.getStandingCharge());
-		tariffDetails.setPersonalProjection(accountList.getPersonalProjection());
-		tariffDetails.setEstimatedAnnualConsumption(accountList.getEstimatedAnnualConsumption());
-		tariffDetails.setCancellationCharge(accountList.getCancellationCharge());
-		tariffDetails.setEndDate(accountList.getEndDate());
-		account.setTariffDetails(tariffDetails);
+		Optional<AccountDatabase> fetchedAccountList = repo.findById(id);
+		if (fetchedAccountList.isPresent()) {
+			ModelMapper mapper = new ModelMapper();
+			Tariff tariffDetails = new Tariff();
+			account = mapper.map(fetchedAccountList.get(), Account.class);
+			tariffDetails.setUnitRate(fetchedAccountList.get().getUnitRate());
+			tariffDetails.setSupplierName(fetchedAccountList.get().getSupplierName());
+			tariffDetails.setTariffName(fetchedAccountList.get().getTariffName());
+			tariffDetails.setStandingCharge(fetchedAccountList.get().getStandingCharge());
+			tariffDetails.setPersonalProjection(fetchedAccountList.get().getPersonalProjection());
+			tariffDetails.setEstimatedAnnualConsumption(fetchedAccountList.get().getEstimatedAnnualConsumption());
+			tariffDetails.setCancellationCharge(fetchedAccountList.get().getCancellationCharge());
+			tariffDetails.setEndDate(fetchedAccountList.get().getEndDate());
+			account.setTariffDetails(tariffDetails);
+		} else {
+			throw new NoSuchElementException("Account with given id does not exist");
+		}
 		return account;
-
 	}
 
 	public void update(Account account, String id, Account existAccount) {
@@ -69,6 +76,32 @@ public class AccountService {
 			repo.save(accounts);
 		}
 		return;
+	}
+
+	public List<Account> retrieveAccount(int customerId) {
+		List<Account> listOfAccounts = new ArrayList<Account>();
+		Optional<List<AccountDatabase>> fetchedAccountList = repo.findByCustomerId(customerId);
+		if (fetchedAccountList.isPresent()) {
+			fetchedAccountList.get().forEach(accounts -> {
+				Account account = new Account();
+				ModelMapper mapper = new ModelMapper();
+				Tariff tariffDetails = new Tariff();
+				account = mapper.map(accounts, Account.class);
+				tariffDetails.setUnitRate(accounts.getUnitRate());
+				tariffDetails.setSupplierName(accounts.getSupplierName());
+				tariffDetails.setTariffName(accounts.getTariffName());
+				tariffDetails.setStandingCharge(accounts.getStandingCharge());
+				tariffDetails.setPersonalProjection(accounts.getPersonalProjection());
+				tariffDetails.setEstimatedAnnualConsumption(accounts.getEstimatedAnnualConsumption());
+				tariffDetails.setCancellationCharge(accounts.getCancellationCharge());
+				tariffDetails.setEndDate(accounts.getEndDate());
+				account.setTariffDetails(tariffDetails);
+				listOfAccounts.add(account);
+			});
+		} else {
+			throw new NoSuchElementException("Accounts with given customer id does not exist");
+		}
+		return listOfAccounts;
 	}
 
 	public void delete(String id) {
