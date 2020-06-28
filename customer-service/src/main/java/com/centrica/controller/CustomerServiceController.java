@@ -1,6 +1,7 @@
 package com.centrica.controller;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -34,6 +35,8 @@ public class CustomerServiceController {
 		try {
 			Customer customer = service.retrivecustomer(id);
 			return new ResponseEntity<>(customer, HttpStatus.OK);
+		} catch (NoSuchElementException e) {
+			throw e;
 		} catch (Exception e) {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
@@ -46,6 +49,8 @@ public class CustomerServiceController {
 			if (!customer.isEmpty())
 				return new ResponseEntity<List<Customer>>(customer, HttpStatus.OK);
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		} catch (NoSuchElementException e) {
+			throw e;
 		} catch (Exception e) {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
@@ -63,6 +68,8 @@ public class CustomerServiceController {
 			Customer existCustomer = service.retrivecustomer(id);
 			service.update(customer, id, existCustomer);
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+		} catch (NoSuchElementException e) {
+			throw e;
 		} catch (Exception e) {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
